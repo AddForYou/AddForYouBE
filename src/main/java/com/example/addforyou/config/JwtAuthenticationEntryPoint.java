@@ -1,7 +1,11 @@
 package com.example.addforyou.config;
 
+import com.example.addforyou.exception.ErrorMessage;
 import com.example.addforyou.exception.member.ForbiddenMemberException;
 import com.example.addforyou.exception.member.UnauthorizedMemberException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.AuthenticationException;
@@ -12,6 +16,11 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.lang.runtime.ObjectMethods;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 
 @Slf4j
 @Component
@@ -56,8 +65,21 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
     }
 
     private void makeResultResponse(HttpServletResponse response,
-                                    Exception e,
-                                    HttpStatus status) {
+                                    Exception exception,
+                                    HttpStatus httpStatus) throws IOException {
 
+        try(OutputStream os = response.getOutputStream()) {
+
+
+            JavaTimeModule javaTimeModule = new JavaTimeModule();
+            LocalDateTimeSerializer localDateTimeSerializer = new LocalDateTimeSerializer(
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneId.of("Asia/Seoul"))
+            );
+
+            javaTimeModule.addSerializer(LocalDateTime.class, localDateTimeSerializer);
+            ObjectMapper mapper = new ObjectMapper().registerModule(javaTimeModule);
+            mapper.writeValue(os, ErrorMessage.of(exception,httpStatus));
+            os.flush();
+        }
     }
 }
