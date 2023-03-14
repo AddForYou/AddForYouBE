@@ -1,5 +1,6 @@
 package com.example.addforyou.config;
 
+import com.example.addforyou.exception.member.ForbiddenMemberException;
 import com.example.addforyou.exception.member.UnauthorizedMemberException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -29,22 +30,34 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
 
     }
 
-    private void sendErrorDenied(HttpServletResponse response) {
+    private void sendErrorDenied(HttpServletResponse response) throws IOException {
+        response.setStatus(HttpServletResponse.SC_FORBIDDEN); // 403
+        response.setContentType("application/json,charset=utf-8");
+
+        makeResultResponse(
+                response,
+                new ForbiddenMemberException("권한이 없는 요청입니다."),
+                HttpStatus.UNAUTHORIZED
+        );
 
     }
 
 
-    private void sendErrorUnauthorized(HttpServletResponse response) {
+    private void sendErrorUnauthorized(HttpServletResponse response) throws IOException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED); // 401
         response.setContentType("application/json,charset=utf-8");
 
         makeResultResponse(
+                response,
                 new UnauthorizedMemberException("로그인이 필요합니다."),
                 HttpStatus.UNAUTHORIZED
         );
 
     }
 
-    private void makeResultResponse(UnauthorizedMemberException e, HttpStatus status) {
+    private void makeResultResponse(HttpServletResponse response,
+                                    Exception e,
+                                    HttpStatus status) {
+
     }
 }
